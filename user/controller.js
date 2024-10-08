@@ -3,98 +3,55 @@ const { handleError } = require("../errorHandler");
 const bcrypt = require("bcrypt");
 const { config } = require("nodemon");
 const crypto = require("crypto");
-// const transporter = require("../mailTransporter");
-// const { error } = require("error");
 const nodemailer = require("nodemailer");
 const jwt = require('jsonwebtoken');
-// require('dotenv').config(); 
-// // const { config } = require("process");
-
 const JWT_SECRET = config.JWT_SECRET || "your_jwt_secret_key"
-
-// const registerUser = async (req, res) => {
-//   const {
-//     user_Name,
-//     user_Email,
-//     user_Password,
-//     user_phoneno,
-//     user_latitude,
-//     user_longitude,
-//     user_pincode,
-//     user_status,
-//     user_OTP,
-//     OTP_Expiration,
-//     is_OTP_Verified,
-//     role,
-//   } = req.body;
-//   try {
-//     if (user_Password) {
-//       const hashedpassword = await bcrypt.hash(user_Password, 10);
-//       const user = await User.create({
-//         user_Name: user_Name,
-//         user_Email: user_Email,
-//         user_Password: hashedpassword,
-//         user_phoneno: user_phoneno,
-//         user_latitude: user_latitude,
-//         user_longitude: user_longitude,
-//         user_pincode: user_pincode,
-//         user_status: user_status,
-//         user_OTP: user_OTP,
-//         OTP_Expiration: OTP_Expiration,
-//         is_OTP_Verified: is_OTP_Verified,
-//         role: role,
-//       });
-
-//       res.status(200).json({ user, status: "SUCCESS" });
-//     }
-//   } catch (error) {
-//     handleError(error, res);
-//   }
-// };
 
 
 const registerUser = async (req, res) => {
   const {
-    user_Name,
-    user_Email,
-    user_Password,
-    user_phoneno,
-    user_latitude,
-    user_longitude,
-    user_pincode,
-    user_status,
-    user_OTP,
-    OTP_Expiration,
-    is_OTP_Verified,
-    role,
+      user_Name,
+      user_Email,
+      user_Password,
+      user_phoneno,
+      user_latitude,
+      user_longitude,
+      user_pincode,
+      user_status,
+      user_OTP,
+      OTP_Expiration,
+      is_OTP_Verified,
+      role
   } = req.body;
 
   try {
-    if (user_Password) {
-      const hashedpassword = await bcrypt.hash(user_Password, 10);
-      const user = await User.create({
-        user_Name: user_Name,
-        user_Email: user_Email,
-        user_Password: hashedpassword,
-        user_phoneno: user_phoneno,
-        user_latitude: user_latitude,
-        user_longitude: user_longitude,
-        user_pincode: user_pincode,
-        user_status: user_status,
-        user_OTP: user_OTP,
-        OTP_Expiration: OTP_Expiration,
-        is_OTP_Verified: is_OTP_Verified,
-        role: role,
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(user_Password, 10);
+
+      // Create a new user
+      const newUser = await User.create({
+          user_Name,
+          user_Email,
+          user_Password: hashedPassword,
+          user_phoneno,
+          user_latitude,
+          user_longitude,
+          user_pincode,
+          user_status,
+          user_OTP,
+          OTP_Expiration,
+          is_OTP_Verified,
+          role
       });
 
-      res.status(200).json({ user, status: "SUCCESS" });
-    }
+      return res.status(201).json({ message: 'User registered successfully', user: newUser });
   } catch (error) {
-    console.error(error); // Log the error to the console for debugging
-    res.status(500).json({ message: "Internal server error", error });
+      if (error.name === 'SequelizeValidationError') {
+          return res.status(400).json({ errors: error.errors.map(err => err.message) });
+      }
+      return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
-
 
 const getallUser = async (req, res) => {
   try {

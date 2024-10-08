@@ -11,26 +11,61 @@ const sequelize = new Sequelize(
     logging: false,
 });
 
-
-//Test the connection
+// Test the connection
 sequelize
     .authenticate()
     .then(() => {
         console.log("Connection has been established successfully");
     })
     .catch((err) => {
-        console.log('Unable to connect to the database');
-        
+        console.log('Unable to connect to the database:', err);
     });
 
-//Auto sync models without forcing
+// Initialize models
+const db = {};
+
+db.sequelize = sequelize;
+db.Sequelize = Sequelize;
+
+// Import models
+db.Shop = require('../shop/ShopModel.js')(sequelize, DataTypes);
+db.Product = require('../Product/ProductModel.js')(sequelize, DataTypes);  // Ensure this is uncommented
+
+// Define relationships
+db.Shop.hasMany(db.Product, { as: 'products' });
+db.Product.belongsTo(db.Shop, { foreignKey: 'shopId', as: 'shop' });
+
+// Auto sync models without forcing
 sequelize
-    .sync({})
+    .sync()
     .then(() => {
-        console.log("Yes re-sync done!!");
+        console.log("Yes, re-sync done!!");
     })
     .catch((err) => {
-        console.log("Unable to sync the database.");
-    })
+        console.log("Unable to sync the database:", err);
+    });
 
-module.exports = sequelize;
+module.exports = db;
+
+// const { Sequelize, DataTypes } = require('sequelize');
+// const dbConfig = require('./config');
+
+// const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
+//     host: dbConfig.HOST,
+//     dialect: dbConfig.DIALECT,
+//     port: dbConfig.DBPORT,
+//     logging: false,
+// });
+
+// const db = {};
+// db.Sequelize = Sequelize;
+// db.sequelize = sequelize;
+
+// // Sync models and export
+// sequelize.sync().then(() => {
+//     console.log("Database synchronized.");
+// }).catch((err) => {
+//     console.error("Error syncing database:", err);
+// });
+
+// module.exports = db;

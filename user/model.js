@@ -1,18 +1,15 @@
-const { DataTypes, Sequelize } = require('sequelize');
-const sequelize = require('../db/index');
-// const sequelize = require('../config/database'); // Adjust the path to your DB config
+const { DataTypes } = require('sequelize');
+const db = require('../db/index'); // Ensure this is the correct path to your sequelize instance
 
-// const sequelize = require("../db/config")
-
-const User = sequelize.define('User', {
+const User = db.sequelize.define('User', {
     user_ID: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
     },
-    user_name: {
+    user_Name: {
         type: DataTypes.STRING,
-        //allowNull: false,
+        allowNull: true, // Make user_name mandator
     },
     user_Email: {
         type: DataTypes.STRING,
@@ -22,10 +19,10 @@ const User = sequelize.define('User', {
         },
         validate: {
             notEmpty: {
-                msg: "Email cannot be empty",  // Corrected typo from 'br'
+                msg: "Email cannot be empty",
             },
             isEmail: {
-                msg: "Email format is invalid",  // Corrected typo from 'Eamil'
+                msg: "Email format is invalid",
             },
         },
     },
@@ -34,7 +31,7 @@ const User = sequelize.define('User', {
         allowNull: false,
         validate: {
             notEmpty: {
-                msg: "Password cannot be empty",  // Corrected typo from 'cannnot'
+                msg: "Password cannot be empty",
             },
             len: {
                 args: [6, 100],
@@ -46,7 +43,7 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: false,
         unique: {
-            msg: "Phone number must be unique",  // Corrected typo from 'musy'
+            msg: "Phone number must be unique",
         },
         validate: {
             notEmpty: {
@@ -74,8 +71,8 @@ const User = sequelize.define('User', {
         allowNull: false,
     },
     user_status: {
-        type: DataTypes.BOOLEAN,  // Changed from `Boolean` to `DataTypes.BOOLEAN`
-        allowNull: true,          // Added allowNull if this field isn't always required
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
     },
     user_OTP: {
         type: DataTypes.INTEGER,
@@ -104,19 +101,18 @@ const User = sequelize.define('User', {
             },
         },
     },
-
     isDeleted: {
-        type: DataTypes.BOOLEAN,  // Correct data type
+        type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: false,  // Default value for new records
+        defaultValue: false,
     }
 }, {
     timestamps: true,
-    defaultScope:{
+    defaultScope: {
         where: {
-            isDeleted: false, // Ensure this is correct and corresponds to the column in the DB
+            isDeleted: false,
         },
-    }
+    },
 });
 
 module.exports = User;
