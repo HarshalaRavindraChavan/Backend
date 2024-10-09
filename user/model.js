@@ -9,62 +9,31 @@ const User = db.sequelize.define('User', {
     },
     user_Name: {
         type: DataTypes.STRING,
-        allowNull: true, // Make user_name mandator
+        allowNull: false,
     },
     user_Email: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: {
-            msg: "Email address already in use",
-        },
-        validate: {
-            notEmpty: {
-                msg: "Email cannot be empty",
-            },
-            isEmail: {
-                msg: "Email format is invalid",
-            },
-        },
     },
     user_Password: {
         type: DataTypes.STRING,
         allowNull: false,
-        validate: {
-            notEmpty: {
-                msg: "Password cannot be empty",
-            },
-            len: {
-                args: [6, 100],
-                msg: "Password must be between 6 and 100 characters",
-            },
-        },
     },
     user_phoneno: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: {
-            msg: "Phone number must be unique",
-        },
-        validate: {
-            notEmpty: {
-                msg: "Phone number cannot be empty",
-            },
-            isNumeric: {
-                msg: "Phone number must be numeric",
-            },
-            len: {
-                args: [10, 15],
-                msg: "Phone number must be between 10 to 15 digits",
-            },
-        },
     },
-    user_latitude: {
-        type: DataTypes.DECIMAL(9, 6),
-        allowNull: false,
-    },
-    user_longitude: {
-        type: DataTypes.DECIMAL(9, 6),
-        allowNull: false,
+    // user_latitude: {
+    //     type: DataTypes.DECIMAL(9, 6),
+    //     allowNull: true,
+    // },
+    // user_longitude: {
+    //     type: DataTypes.DECIMAL(9, 6),
+    //     allowNull: true,
+    // },
+    user_location: {
+        type: DataTypes.STRING,
+        allowNull: true
     },
     user_pincode: {
         type: DataTypes.INTEGER,
@@ -72,7 +41,8 @@ const User = db.sequelize.define('User', {
     },
     user_status: {
         type: DataTypes.BOOLEAN,
-        allowNull: true,
+        allowNull: false,
+        defaultValue: false,
     },
     user_OTP: {
         type: DataTypes.INTEGER,
@@ -81,11 +51,6 @@ const User = db.sequelize.define('User', {
     OTP_Expiration: {
         type: DataTypes.DATE,
         allowNull: true,
-        validate: {
-            isDate: {
-                msg: "Invalid date format for OTP expiration",
-            },
-        },
     },
     is_OTP_Verified: {
         type: DataTypes.BOOLEAN,
@@ -93,17 +58,10 @@ const User = db.sequelize.define('User', {
     },
     role: {
         type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            isIn: {
-                args: [['Admin', 'Sub-Admin', 'Shop-Owner', 'Delivery-Boy', 'Customer']],
-                msg: "Role must be one of Admin, Sub-Admin, Shop-Owner, Delivery-Boy, or Customer",
-            },
-        },
+        allowNull: true,
     },
     isDeleted: {
         type: DataTypes.BOOLEAN,
-        allowNull: false,
         defaultValue: false,
     }
 }, {
