@@ -10,9 +10,29 @@ const JWT_SECRET = config.JWT_SECRET || "your_jwt_secret_key"
 
 const registerUser = async (req, res) => {
   const {
+    user_Name,
+    user_Email,
+    user_Password,
+    user_phoneno,
+    user_latitude,
+    user_longitude,
+    user_pincode,
+    user_status,
+    user_OTP,
+    OTP_Expiration,
+    is_OTP_Verified,
+    role
+  } = req.body;
+
+  try {
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(user_Password, 10);
+
+    // Create a new user
+    const newUser = await User.create({
       user_Name,
       user_Email,
-      user_Password,
+      user_Password: hashedPassword,
       user_phoneno,
       user_latitude,
       user_longitude,
@@ -22,34 +42,14 @@ const registerUser = async (req, res) => {
       OTP_Expiration,
       is_OTP_Verified,
       role
-  } = req.body;
+    });
 
-  try {
-      // Hash the password
-      const hashedPassword = await bcrypt.hash(user_Password, 10);
-
-      // Create a new user
-      const newUser = await User.create({
-          user_Name,
-          user_Email,
-          user_Password: hashedPassword,
-          user_phoneno,
-          user_latitude,
-          user_longitude,
-          user_pincode,
-          user_status,
-          user_OTP,
-          OTP_Expiration,
-          is_OTP_Verified,
-          role
-      });
-
-      return res.status(201).json({ message: 'User registered successfully', user: newUser });
+    return res.status(201).json({ message: 'User registered successfully', user: newUser });
   } catch (error) {
-      if (error.name === 'SequelizeValidationError') {
-          return res.status(400).json({ errors: error.errors.map(err => err.message) });
-      }
-      return res.status(500).json({ message: 'Internal Server Error' });
+    if (error.name === 'SequelizeValidationError') {
+      return res.status(400).json({ errors: error.errors.map(err => err.message) });
+    }
+    return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
 
@@ -91,12 +91,18 @@ const updateUser = async (req, res) => {
         .status(401)
         .send({ message: "User does not exit", status: "FAILED" });
     }
-    const updatedUser = await User.update(data, {
-      where: { user_id: ID },
-    });
-    res
-      .status(200)
-      .json({ updateUser, message: "Details has been updated successfully" });
+    if (data.user_Password) {
+      data.user_Password = await bcrypt.hash(data.user_Password, 10);
+      await User.update(data, {
+        where: { user_id: ID },
+      });
+    }
+    await User.update(data, {
+      where: { user_id: ID }
+    }),
+      res
+        .status(200)
+        .json({ updateUser, message: "Details has been updated successfully" });
   } catch (error) {
     handleError(error, res);
   }
@@ -197,56 +203,56 @@ const userLogin = async (req, res) => {
   const { user_Email, user_Password } = req.body;
 
   try {
-      // Check if email and password are provided
-      if (!user_Email || !user_Password) {
-          return res.status(400).json({ message: "Email and password are required" });
-      }
+    // Check if email and password are provided
+    if (!user_Email || !user_Password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
 
-      // Check if the user exists in the database
-      const user = await User.findOne({
-          where: { user_Email, isDeleted: false },
-      });
+    // Check if the user exists in the database
+    const user = await User.findOne({
+      where: { user_Email, isDeleted: false },
+    });
 
-      if (!user) {
-          return res.status(404).json({ message: "User not found" });
-      }
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-      // Compare the provided password with the stored hashed password
-      const isMatch = await bcrypt.compare(user_Password, user.user_Password);
-      if (!isMatch) {
-          return res.status(401).json({ message: "Invalid password" });
-      }
+    // Compare the provided password with the stored hashed password
+    const isMatch = await bcrypt.compare(user_Password, user.user_Password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
 
-      // Hardcode the JWT_SECRET here
-      const JWT_SECRET = "your_jwt_secret_key"; // Replace with your actual secret key
+    // Hardcode the JWT_SECRET here
+    const JWT_SECRET = "your_jwt_secret_key"; // Replace with your actual secret key
 
-      // Generate JWT token with user ID and email
-      const token = jwt.sign(
-          { user_ID: user.user_ID, user_Email: user.user_Email },
-          JWT_SECRET,
-          { expiresIn: "1h" } // Set expiration time for the token
-      );
+    // Generate JWT token with user ID and email
+    const token = jwt.sign(
+      { user_ID: user.user_ID, user_Email: user.user_Email },
+      JWT_SECRET,
+      { expiresIn: "1h" } // Set expiration time for the token
+    );
 
-      // Respond with success message, JWT token, and user details
-      res.status(200).json({
-          message: "Login successful",
-          token,
-          user: {
-              user_ID: user.user_ID,
-              user_Email: user.user_Email,
-              user_name: user.user_name, // Assuming user_name is a valid field in your model
-              user_pincode: user.user_pincode,
-              user_phoneno: user.user_phoneno,
-              user_status: user.user_status,
-              user_OTP: user.user_OTP,
-              OTP_Expiration: user.OTP_Expiration,
-              role: user.role,
-              is_OTP_Verified: user.is_OTP_Verified,
-          },
-      });
+    // Respond with success message, JWT token, and user details
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      user: {
+        user_ID: user.user_ID,
+        user_Email: user.user_Email,
+        user_name: user.user_name, // Assuming user_name is a valid field in your model
+        user_pincode: user.user_pincode,
+        user_phoneno: user.user_phoneno,
+        user_status: user.user_status,
+        user_OTP: user.user_OTP,
+        OTP_Expiration: user.OTP_Expiration,
+        role: user.role,
+        is_OTP_Verified: user.is_OTP_Verified,
+      },
+    });
   } catch (error) {
-      console.error("Error during login:", error);
-      res.status(500).json({ message: "Internal server error", error: error.message });
+    console.error("Error during login:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
 
