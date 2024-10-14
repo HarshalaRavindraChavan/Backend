@@ -31,10 +31,10 @@ const User = db.sequelize.define('User', {
     //     type: DataTypes.DECIMAL(9, 6),
     //     allowNull: true,
     // },
-    user_location: {
-        type: DataTypes.STRING,
-        allowNull: true
-    },
+    // user_location: {
+    //     type: DataTypes.STRING,
+    //     allowNull: true
+    // },
     user_pincode: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -47,6 +47,9 @@ const User = db.sequelize.define('User', {
     user_OTP: {
         type: DataTypes.INTEGER,
         allowNull: true,
+        validate: {
+            len: [6, 6], // Ensure OTP is 6 digits
+        },
     },
     OTP_Expiration: {
         type: DataTypes.DATE,
@@ -55,6 +58,7 @@ const User = db.sequelize.define('User', {
     is_OTP_Verified: {
         type: DataTypes.BOOLEAN,
         allowNull: true,
+        defaultValue: false, // Default OTP verification is false
     },
     role: {
         type: DataTypes.STRING,

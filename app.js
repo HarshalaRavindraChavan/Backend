@@ -8,6 +8,7 @@ var corOptions={
 }
 
 // app.use(cors(corOptions));
+// dotenv.config();
 
 app.use(cors());
 

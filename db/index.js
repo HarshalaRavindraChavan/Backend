@@ -1,5 +1,7 @@
 const dbConfig = require('./config');
 const { Sequelize, DataTypes } = require('sequelize');
+const dotenv = require('dotenv');
+    
 
 const sequelize = new Sequelize(
     dbConfig.DB,
@@ -36,6 +38,7 @@ db.Sequelize = Sequelize;
 //db.Product.belongsTo(db.Shop, { foreignKey: 'shopId', as: 'shop' }); RNZ_temp_comment
 
 // Auto sync models without forcing
+
 sequelize
     .sync()
     .then(() => {
@@ -46,6 +49,8 @@ sequelize
     });
 
 module.exports = db;
+
+
 
 // const { Sequelize, DataTypes } = require('sequelize');
 // const dbConfig = require('./config');
