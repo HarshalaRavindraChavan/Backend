@@ -1,4 +1,4 @@
-const User = require("./model");
+const User = require("../models/user");
 const { handleError } = require("../errorHandler");
 const bcrypt = require("bcrypt");
 const { config } = require("nodemon");
