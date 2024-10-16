@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const userController = require("./controllers/user");
+const shopController = require("./controllers/shop");
 
 /* User Routes */
 const userRouter = router;
@@ -15,6 +16,15 @@ userRouter.post('/send-otp',userController.sendOTPSMS);
 userRouter.post('/verify-otp',userController.verifyOTP);
 router.use('/user', userRouter);
 /* End of User Routes */
+
+
+const shopRouter = router;
+router.get('/', shopController.getAllShops);
+// Get shop by ID
+router.get('/:id', shopController.getShopById);
+// Create a new shop
+router.post('/', shopController.createShop);
+router.use('/shop', shopRouter);
 
 
 module.exports=router;
