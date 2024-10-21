@@ -21,14 +21,14 @@ const registerUser = async (req, res) => {
     user_Email,
     user_Password,
     user_phoneno,
-    user_latitude,
-    user_longitude,
-    user_pincode,
-    user_status,
-    user_OTP,
-    OTP_Expiration,
-    is_OTP_Verified,
-    role,
+    // user_latitude,
+    // user_longitude,
+    // user_pincode,
+    // user_status,
+    // user_OTP,
+    // OTP_Expiration,
+    // is_OTP_Verified,
+    // role,
   } = req.body;
 
   try {
@@ -41,14 +41,14 @@ const registerUser = async (req, res) => {
       user_Email,
       user_Password: hashedPassword,
       user_phoneno,
-      user_latitude,
-      user_longitude,
-      user_pincode,
-      user_status,
-      user_OTP,
-      OTP_Expiration,
-      is_OTP_Verified,
-      role,
+      // user_latitude,
+      // user_longitude,
+      // user_pincode,
+      // user_status,
+      // user_OTP,
+      // OTP_Expiration,
+      // is_OTP_Verified,
+      role: "Customer",
     });
 
     return res
@@ -64,7 +64,7 @@ const registerUser = async (req, res) => {
   }
 };
 
-const getallUser = async (req, res) => {
+const getUsers = async (req, res) => {
   try {
     const user = await User.findAll({});
     if (!user) {
@@ -133,82 +133,6 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// const sendOTP = async (req, res) => {
-//   const { user_Email } = req.body;
-//   try {
-//     const user = await User.findOne({ where: { user_Email } });
-//     if (!user) {
-//       return res
-//         .status(401)
-//         .send({ message: "User does not exit", status: "FAILED" });
-//     }
-
-//     // Generate OTP and set expiration time
-//     const otp = crypto.randomInt(100000, 999999).toString();
-//     const otpExpiration = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes from now
-
-//     user.user_OTP = otp;
-//     user.OTP_Expiration = otpExpiration;
-//     await user.save();
-
-//     const transporter = nodemailer.createTransport({
-//       host: "smtp.ethereal.email",
-//       port: 587,
-//       secure: false, // true for port 465, false for other ports
-//       auth: {
-//         user: "maddison53@ethereal.email",
-//         pass: "jn7jnAPss4f63QBp6D",
-//       },
-//     });
-
-//     const message = {
-//       from: '"Amar Chiken " <amarchiken@ethereal.email>', // sender address
-//       to: "bar@example.com, baz@example.com", // list of receivers
-//       subject: "OTP to reset the password", // Subject line
-//       text: `OTP to reset the password is  ${otp}`, // plain text body
-//     };
-
-//     transporter.sendMail(message).then((info) => {
-//       return res.status(201).json({
-//         message: "You should recieve a mail to reset the password",
-//         info: info.messageId,
-//         preview: nodemailer.getTestMessageUrl(info),
-//       });
-//     });
-//   } catch (error) {
-//     handleError(error, res);
-//   }
-// };
-
-// Verify OTP
-// const verifyOTP = async (req, res) => {
-//   const { user_Email, user_OTP } = req.body;
-//   try {
-//     const user = await User.findOne({ where: { user_Email } });
-//     console.log(user);
-//     if (!user) {
-//       return res
-//         .status(400)
-//         .send({ message: "User not found", status: "FAILED" });
-//     }
-
-//     if (user.user_OTP !== user_OTP) {
-//       return res.status(400).send({ message: "OTP expired", status: "FAILED" });
-//     }
-
-//     if (user.OTP_Expiration < new Date()) {
-//       return res
-//         .status(400)
-//         .send({ message: "OTP has expired", status: "FAILED" });
-//     }
-
-//     res.send({ message: "OTP verified successfully", status: "SUCCESS" });
-//   } catch (error) {
-//     res.json({ message: "Error verifiying the OTP" });
-//     handleError(error, res);
-//   }
-// };
-
 const userLogin = async (req, res) => {
   const { user_Email, user_Password } = req.body;
 
@@ -271,12 +195,12 @@ const userLogin = async (req, res) => {
 };
 
 // POST route to generate OTP and send SMS
-const sendOTPSMS = async (req, res) => {
+const generateLoginOTP = async (req, res) => {
   try {
-    const { number } = req.body; // Extract phone number from request body
+    const { user_phoneno } = req.body; // Extract phone number from request body
     console.log(req.body);
     // Validate phone number
-    if (!number) {
+    if (!user_phoneno) {
       console.error("Phone number is required");
       return res.status(400).json({ message: "Phone number is required" });
     }
@@ -291,7 +215,7 @@ const sendOTPSMS = async (req, res) => {
     const options = {
       authorization: process.env.OTP_Authorization, // Authorization key from your .env
       message: `Hi user,\nWelcome to Amir Chicken!\nYour OTP is ${otp}.\nValid for 2 minutes only.`,
-      numbers: [number], // Phone number must be an array, even for a single number
+      numbers: [user_phoneno], // Phone number must be an array, even for a single number
     };
 
     // Log the authorization key for debugging (remove in production)
@@ -299,12 +223,12 @@ const sendOTPSMS = async (req, res) => {
 
     // Save the OTP in database. Required for verfiying validity
     try {
-      const user = await User.findOne({ where: { user_phoneno: number } });
+      const user = await User.findOne({ where: { user_phoneno: user_phoneno } });
 
       if (!user) {
         return res
-          .status(401)
-          .send({ message: "User does not exit", status: "FAILED" });
+          .status(400)
+          .send({ message: "User does not exit", status: "FAILED", code: "NO_USER" });
       }
       if (user) {
         await User.update(
@@ -328,7 +252,8 @@ const sendOTPSMS = async (req, res) => {
     // Respond with success
     res.status(200).json({
       message: "OTP sent successfully!",
-      otp: otp, // Remove in production for security
+      otp_status: true,
+      // otp: otp, // Remove in production for security
       response: response,
     });
   } catch (error) {
@@ -337,20 +262,19 @@ const sendOTPSMS = async (req, res) => {
   }
 };
 
-
 // Function to verify OTP
-const verifyOTP = async (req, res) => {
+const verifyLoginOTP = async (req, res) => {
   try {
-    const { number, otp } = req.body;
+    const { user_phoneno, otp } = req.body;
 
     // Validate phone number and OTP input
-    if (!number || !otp) {
+    if (!user_phoneno || !otp) {
       return res.status(400).json({ message: "Phone number and OTP are required" });
     }
 
     // Get stored OTP from database
     try {
-      const user = await User.findOne({ where: { user_phoneno: number } });
+      const user = await User.findOne({ where: { user_phoneno: user_phoneno } });
 
       if (!user) {
         return res
@@ -398,13 +322,11 @@ const verifyOTP = async (req, res) => {
 
 module.exports = {
   registerUser,
-  getallUser,
+  getUsers,
   getUserbyID,
   updateUser,
   deleteUser,
-  // sendOTP,
-  // verifyOTP,
   userLogin,
-  sendOTPSMS,
-  verifyOTP
+  generateLoginOTP,
+  verifyLoginOTP,
 };

@@ -37,12 +37,12 @@ const User = db.sequelize.define('User', {
     // },
     user_pincode: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
     },
     user_status: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: false,
+        defaultValue: true,
     },
     user_OTP: {
         type: DataTypes.INTEGER,

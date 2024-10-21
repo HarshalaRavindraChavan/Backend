@@ -8,7 +8,7 @@ const cors = require('cors');
 // const sequelize = require('./db/config');
 
 var corOptions={
-    origin:'http://localhost:8081'
+    origin:'http://localhost:3000'
 }
 
 // app.use(cors(corOptions));
@@ -26,6 +26,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(upload.array()); 
 app.use(express.static('public'));
 
+// app.use(function(req, res, next) {
+//     res.header("Access-Control-Allow-Origin", "*");
+//     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+//     next();
+// });
+
 app.use(express.json());
 
 app.get("/",(req,res)=>{
@@ -35,10 +41,6 @@ app.get("/",(req,res)=>{
 const routes = require("./routes");
 app.use('/api', routes);
 
-const userRouter = require("./user/route");
-app.use("/userAPI",userRouter);
-
-
 // Shop and Product routes
 const shopRoutes = require('./routes/shop.routes');
 const productRoutes = require('./routes/product.routes');
@@ -47,7 +49,7 @@ app.use('/api/shops', shopRoutes);
 app.use('/api/products', productRoutes);
 
 
-const PORT =process.env.PORT || 5000
+const PORT =process.env.PORT || 5001
 
 app.listen(PORT,()=>{
     console.log(`Server is running on port ${PORT}`);
