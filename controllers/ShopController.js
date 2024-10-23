@@ -1,4 +1,4 @@
-const Shop = require('./ShopModel'); // Adjust the path as necessary
+const Shop = require('../models/ShopModel'); // Adjust the path as necessary
 
 
 
