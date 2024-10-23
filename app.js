@@ -42,12 +42,14 @@ const routes = require("./routes");
 app.use('/api', routes);
 
 // Shop and Product routes
-const shopRoutes = require('./routes/shop.routes');
-const productRoutes = require('./routes/product.routes');
+// const shopRoutes = require('./routes/shop.routes');
+// const productRoutes = require('./routes/product.routes');
 
-app.use('/api/shops', shopRoutes);
-app.use('/api/products', productRoutes);
+// app.use('/api/shops', shopRoutes);
+// app.use('/api/products', productRoutes);
 
+const shopRouter =require ('./routes');
+app.use('/api',shopRouter)
 
 const PORT =process.env.PORT || 5001
 
