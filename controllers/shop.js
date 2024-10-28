@@ -1,11 +1,27 @@
-const Shop = require('../models/ShopModel'); // Adjust the path as necessary
-
-
+const Shop = require('../models/shop'); // Adjust the path as necessary
+const fs = require('fs');
+const path = require('path'); 
+// const multer = require('multer')
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, 'uploads')
+//   },
+//   filename: function (req, file, cb) {
+//     const uniquePrefix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+//     cb(null, uniquePrefix + "-" + file.originalname)
+//   }
+// })
+// const upload = multer({ storage }).single("file");
 
 const createShop = async (req, res) => {
-    const { shopName, shopLocation, address, pincode, mobileNumber, emailAddress, shopImage } = req.body;
+    const { shopName, shopLocation, address, pincode, mobileNumber, emailAddress } = req.body;
 
     try {
+        let shopImage = null;
+        if(typeof req.file !== "undefined") {
+            shopImage = req.file.filename;
+        }
+
         const newShop = await Shop.create({
             shopName: shopName,
             shopLocation: shopLocation,
@@ -15,7 +31,7 @@ const createShop = async (req, res) => {
             emailAddress: emailAddress,
             shopImage: shopImage
         });
-
+        
         res.status(201).json({
             message: "Shop created successfully",
             data: newShop
@@ -75,6 +91,8 @@ const getShopById = async (req, res) => {
 // Controller function to update a shop
 const updateShop = async (req, res) => {
     const { id } = req.params; // Get ID from request params
+    console.log("id: " + id);
+    console.log(req.body);
 
     try {
         // Update shop where ID matches
@@ -82,6 +100,18 @@ const updateShop = async (req, res) => {
             where: { id: id }
         });
 
+        if(typeof req.file !== "undefined") {
+            const shopImage = req.file.filename;
+            // Remove saved shop image
+            const shopToDelete = await Shop.findByPk(id); // Retrieve the updated shop
+            if(shopToDelete.shopImage) {
+                clearImage(shopToDelete.shopImage);
+            }
+            // Update shop where ID matches
+            const [updated] = await Shop.update({shopImage: shopImage}, {
+                where: { id: id }
+            });
+        }
         if (updated) {
             const updatedShop = await Shop.findByPk(id); // Retrieve the updated shop
             return res.status(200).json({
@@ -108,6 +138,12 @@ const updateShop = async (req, res) => {
 const deleteShop = async (req, res) => {
     const { id } = req.params; // Get ID from request params
     try {
+        // Remove saved shop image
+        const shopToDelete = await Shop.findByPk(id); // Retrieve the updated shop
+        if(shopToDelete.shopImage) {
+            clearImage(shopToDelete.shopImage);
+        }
+        
         const deleted = await Shop.destroy({
             where: { id: id }, // Soft delete shop where ID matches
         });
@@ -126,6 +162,10 @@ const deleteShop = async (req, res) => {
     }
 };
 
+const clearImage = (filePath) => {
+    filePath = path.join(__dirname, "../uploads", filePath);
+    fs.unlink(filePath, (err) => console.log(err));
+};
 
 module.exports = {
     createShop ,

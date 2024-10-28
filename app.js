@@ -1,10 +1,11 @@
 const express = require('express');
 var bodyParser = require('body-parser');
-var multer = require('multer');
-var upload = multer();
+// var multer = require('multer');
+// var upload = multer({ dest: "uploads/" });
 var moment = require('moment'); 
 const app = express();
 const cors = require('cors');
+const path = require('path'); 
 // const sequelize = require('./db/config');
 
 var corOptions={
@@ -23,8 +24,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //form-urlencoded
 
 // for parsing multipart/form-data
-app.use(upload.array()); 
+// app.use(upload.array()); 
 app.use(express.static('public'));
+
+// Serve images from the 'uploads' directory 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // app.use(function(req, res, next) {
 //     res.header("Access-Control-Allow-Origin", "*");
@@ -48,8 +52,8 @@ app.use('/api', routes);
 // app.use('/api/shops', shopRoutes);
 // app.use('/api/products', productRoutes);
 
-const shopRouter =require ('./routes');
-app.use('/api',shopRouter)
+// const shopRouter =require ('./routes');
+// app.use('/api',shopRouter)
 
 const PORT =process.env.PORT || 5001
 
