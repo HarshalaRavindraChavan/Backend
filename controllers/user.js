@@ -352,10 +352,12 @@ const verifyLoginOTP = async (req, res) => {
 };
 
 const getUsersByRole = async (req, res) => {
-  console.log('HERE');
   const role = req.params.role;
   try {
-    const user = await User.findAll({where: { role: role, isDeleted: false }});
+    const user = await User.findAll({
+      attributes: ['user_ID','user_Name','user_Email','user_phoneno','user_pincode'],
+      where: { role: role, isDeleted: false }
+    });
     if (!user) {
       return res
         .status(401)
