@@ -29,8 +29,8 @@ const isAuthorized = function(authRoles = []) {
                 }
             });
 
-            console.log(authRoles);
-            console.log('User Role: ' + userDetails.role);
+            // console.log(authRoles);
+            // console.log('User Role: ' + userDetails.role);
 
             if(!authRoles.includes(userDetails.role)) return res.status(403).send("Unauthorized.");
         

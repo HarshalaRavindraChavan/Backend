@@ -22,13 +22,15 @@ const productController = require("./controllers/product");
 
 /* User Routes */
 router.post("/user/register",userController.registerUser);
-router.get("/users", isAuthenticated, isAuthorized(['IT']), userController.getUsers);
+router.get("/users", isAuthenticated, isAuthorized(['IT','Admin']), userController.getUsers);
 router.get("/user/:id",userController.getUserbyID);
 router.put("/user/update/:id",userController.updateUser);
 router.delete("/user/delete/:id",userController.deleteUser);
 router.post('/user/login',userController.userLogin);
 router.post('/user/send-otp',userController.generateLoginOTP);
 router.post('/user/verify-otp',userController.verifyLoginOTP);
+// get users by role -- only accessible to admin
+router.get("/users/:role", isAuthenticated, isAuthorized(['IT','Admin']), userController.getUsersByRole);
 /* End of User Routes */
 
 

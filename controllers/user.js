@@ -68,15 +68,15 @@ const registerUser = async (req, res) => {
 };
 
 const getUsers = async (req, res) => {
-  console.log(req.authUser);
   try {
-    const user = await User.findAll({where: { isDeleted: false }});
-    if (!user) {
+    const users = await User.findAll({where: { isDeleted: false }});
+    if (!users) {
       return res
         .status(401)
         .send({ message: "User does not exit", status: "FAILED" });
     }
-    res.send(user);
+
+    return res.send(users);
   } catch (error) {
     handleError(error, res);
   }
@@ -351,6 +351,21 @@ const verifyLoginOTP = async (req, res) => {
   }
 };
 
+const getUsersByRole = async (req, res) => {
+  console.log('HERE');
+  const role = req.params.role;
+  try {
+    const user = await User.findAll({where: { role: role, isDeleted: false }});
+    if (!user) {
+      return res
+        .status(401)
+        .send({ message: "User does not exit", status: "FAILED" });
+    }
+    res.send(user);
+  } catch (error) {
+    handleError(error, res);
+  }
+};
 
 module.exports = {
   registerUser,
@@ -361,4 +376,5 @@ module.exports = {
   userLogin,
   generateLoginOTP,
   verifyLoginOTP,
+  getUsersByRole
 };
