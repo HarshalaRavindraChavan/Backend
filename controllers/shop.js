@@ -1,28 +1,20 @@
 const Shop = require('../models/shop'); // Adjust the path as necessary
 const fs = require('fs');
 const path = require('path'); 
-// const multer = require('multer')
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     cb(null, 'uploads')
-//   },
-//   filename: function (req, file, cb) {
-//     const uniquePrefix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-//     cb(null, uniquePrefix + "-" + file.originalname)
-//   }
-// })
-// const upload = multer({ storage }).single("file");
 
 const createShop = async (req, res) => {
-    const { shopName, shopLocation, address, pincode, mobileNumber, emailAddress } = req.body;
-
+    const { user_id, shopName, shopLocation, address, pincode, mobileNumber, emailAddress } = req.body;
+    console.log(req.file);
     try {
         let shopImage = null;
         if(typeof req.file !== "undefined") {
             shopImage = req.file.filename;
         }
 
+        // Remove once implemented
+        let temp_user_id = 11;
         const newShop = await Shop.create({
+            user_id: temp_user_id,
             shopName: shopName,
             shopLocation: shopLocation,
             address: address,
@@ -163,7 +155,7 @@ const deleteShop = async (req, res) => {
 };
 
 const clearImage = (filePath) => {
-    filePath = path.join(__dirname, "../uploads", filePath);
+    filePath = path.join(__dirname, "../uploads/shop", filePath);
     fs.unlink(filePath, (err) => console.log(err));
 };
 

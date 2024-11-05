@@ -2,7 +2,12 @@ const router = require('express').Router();
 const multer = require('multer')
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads')
+    let uploadOptions = req.originalUrl.split('/');
+    if(uploadOptions[2]) {
+      cb(null, 'uploads/' + uploadOptions[2])
+    } else {
+      cb(null, 'uploads')
+    }
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
@@ -10,13 +15,14 @@ const storage = multer.diskStorage({
   }
 })
 const upload = multer({ storage })
+const { isAuthenticated, isAuthorized } = require('./middlewares/auth');
 const userController = require("./controllers/user");
 const shopController =require("./controllers/shop");
 const productController = require("./controllers/product");
 
 /* User Routes */
 router.post("/user/register",userController.registerUser);
-router.get("/users",userController.getUsers);
+router.get("/users", isAuthenticated, isAuthorized(['IT']), userController.getUsers);
 router.get("/user/:id",userController.getUserbyID);
 router.put("/user/update/:id",userController.updateUser);
 router.delete("/user/delete/:id",userController.deleteUser);
@@ -27,8 +33,7 @@ router.post('/user/verify-otp',userController.verifyLoginOTP);
 
 
  /* SHOP-ROUTES */
-const shopRouter = router;
-router.post('/shop/create', upload.single('file'), shopController.createShop);
+router.post('/shop/create', isAuthenticated, isAuthorized(['Admin','IT']), upload.single('file'), shopController.createShop);
 router.get('/shops', shopController.getAllShops);    
 router.get('/shop/:id', shopController.getShopById);  
 router.put('/shop/update/:id', upload.single('file'), shopController.updateShop);   
@@ -36,14 +41,12 @@ router.delete('/shop/delete/:id', shopController.deleteShop);
 /* End of Shop Routes */
 
 
- /* PRODUCT-ROUTES */
-//  const productRouter = router;
-//  router.post('/create', productController.createShop);
-//  router.get('/', productController.getAllShops);    
-//  router.get('/:id', productController.getShopById);  
-//  router.put('/update/:id', productController.updateShop);   
-//  router.delete('/delete/:id', productController.deleteShop);  
-//  router.use('/product', productRouter);
+/* PRODUCT-ROUTES */
+router.post('/product/create', upload.single('file'), productController.createProduct);
+router.get('/products', productController.getAllProducts);    
+router.get('/product/:id', productController.getProductById);  
+router.put('/product/update/:id', upload.single('file'), productController.updateProduct);   
+router.delete('/product/delete/:id', productController.deleteProduct);
 /* End of Product Routes */
 
 module.exports=router;

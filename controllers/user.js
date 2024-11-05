@@ -5,7 +5,7 @@ const { config } = require("nodemon");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
-const JWT_SECRET = config.JWT_SECRET || "your_jwt_secret_key";
+const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
 const fast2sms = require("fast-two-sms");
 const dotenv = require("dotenv"); // Ensure fast2sms is imported
 var moment = require('moment');
@@ -51,10 +51,13 @@ const registerUser = async (req, res) => {
       role: "Customer",
     });
 
+    console.log(newUser);
+
     return res
       .status(201)
       .json({ message: "User registered successfully", user: newUser });
   } catch (error) {
+    console.log(error);
     if (error.name === "SequelizeValidationError") {
       return res
         .status(400)
@@ -65,8 +68,9 @@ const registerUser = async (req, res) => {
 };
 
 const getUsers = async (req, res) => {
+  console.log(req.authUser);
   try {
-    const user = await User.findAll({});
+    const user = await User.findAll({where: { isDeleted: false }});
     if (!user) {
       return res
         .status(401)
@@ -80,10 +84,15 @@ const getUsers = async (req, res) => {
 
 const getUserbyID = async (req, res) => {
   try {
-    const user = await User.findByPk(req.params.id);
+    const user = await User.findOne({
+      where: {
+        user_ID: req.params.id,
+        isDeleted: false, 
+      },
+    });
     if (!user) {
       return res
-        .status(401)
+        .status(404)
         .send({ message: "User does not exit", status: "FAILED" });
     }
     res.send(user);
@@ -96,10 +105,15 @@ const updateUser = async (req, res) => {
   const ID = req.params.id;
   const data = req.body;
   try {
-    const user = await User.findByPk(ID);
+    const user = await User.findOne({
+      where: {
+        user_ID: ID,
+        isDeleted: false, 
+      },
+    });
     if (!user) {
       return res
-        .status(401)
+        .status(404)
         .send({ message: "User does not exit", status: "FAILED" });
     }
     if (data.user_Password) {
@@ -122,9 +136,16 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
   const ID = req.params.id;
   try {
-    const user = await User.findByPk(ID);
+    const user = await User.findOne({
+      where: {
+        user_ID: ID,
+        isDeleted: false, 
+      },
+    });
     if (!user) {
-      res.send("User not Found");
+      return res
+        .status(404)
+        .send({ message: "User does not exit", status: "FAILED" });
     }
     const deletedUser = await User.destroy({ where: { user_id: ID } });
     res.status(200).json({ deleteUser, message: "User has been deleted." });
@@ -159,15 +180,15 @@ const userLogin = async (req, res) => {
       return res.status(401).json({ message: "Invalid password" });
     }
 
-    // Hardcode the JWT_SECRET here
-    const JWT_SECRET = "your_jwt_secret_key"; // Replace with your actual secret key
+     // Hardcode the JWT_SECRET here
+     const JWT_SECRET = "your_jwt_secret_key"; // Replace with your actual secret key
 
-    // Generate JWT token with user ID and email
-    const token = jwt.sign(
-      { user_ID: user.user_ID, user_Email: user.user_Email },
-      JWT_SECRET,
-      { expiresIn: "1h" } // Set expiration time for the token
-    );
+     // Generate JWT token with user ID and email
+     const token = jwt.sign(
+       { user_ID: user.user_ID, user_Email: user.user_Email },
+       JWT_SECRET,
+       { expiresIn: "1h" } // Set expiration time for the token
+     );
 
     // Respond with success message, JWT token, and user details
     res.status(200).json({
@@ -223,7 +244,7 @@ const generateLoginOTP = async (req, res) => {
 
     // Save the OTP in database. Required for verfiying validity
     try {
-      const user = await User.findOne({ where: { user_phoneno: user_phoneno } });
+      const user = await User.findOne({ where: { user_phoneno: user_phoneno, isDeleted: false } });
 
       if (!user) {
         return res
@@ -274,7 +295,7 @@ const verifyLoginOTP = async (req, res) => {
 
     // Get stored OTP from database
     try {
-      const user = await User.findOne({ where: { user_phoneno: user_phoneno } });
+      const user = await User.findOne({ where: { user_phoneno: user_phoneno, isDeleted: false } });
 
       if (!user) {
         return res
@@ -296,6 +317,14 @@ const verifyLoginOTP = async (req, res) => {
           .status(401)
           .send({ message: "OTP has expired. Request for a new OTP", status: "FAILED" });
         } else {
+          
+          // Generate JWT token with user ID and email
+          const token = jwt.sign(
+            { user_ID: user.user_ID, user_Email: user.user_Email },
+            process.env.JWT_SECRET,
+            { expiresIn: "1h" } // Set expiration time for the token
+          );
+
           await User.update(
             {
               is_OTP_Verified: 1
@@ -306,7 +335,10 @@ const verifyLoginOTP = async (req, res) => {
           );
 
           // Success message and additional logic can go here
-          return res.status(200).json({ message: "OTP verified successfully!" });
+          return res.status(200).json({ 
+            message: "OTP verified successfully!",
+            token
+          });
         }        
       }
     } catch (error) {

@@ -3,6 +3,10 @@ const db = require('../db/index');  // Adjust the path based on your directory s
 
 // Define the Shop model
 const Shop = db.sequelize.define('Shop', {
+    user_id: {
+        type: DataTypes.NUMBER,
+        allowNull: false,
+    },
     shopName: {
         type: DataTypes.STRING,
         allowNull: false,
