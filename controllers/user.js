@@ -337,6 +337,11 @@ const verifyLoginOTP = async (req, res) => {
           // Success message and additional logic can go here
           return res.status(200).json({ 
             message: "OTP verified successfully!",
+            userDetails: {
+              userName: user.user_Name,
+              userEmail: user.user_Email,
+              userPhone: user.user_phoneno
+            },
             token
           });
         }        
