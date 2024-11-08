@@ -29,6 +29,7 @@ router.delete("/user/delete/:id",userController.deleteUser);
 router.post('/user/login',userController.userLogin);
 router.post('/user/send-otp',userController.generateLoginOTP);
 router.post('/user/verify-otp',userController.verifyLoginOTP);
+router.get('/user/logout/current-user', isAuthenticated, userController.userLogout);
 // get users by role -- only accessible to admin
 router.get("/users/:role", isAuthenticated, isAuthorized(['IT','Admin']), userController.getUsersByRole);
 /* End of User Routes */

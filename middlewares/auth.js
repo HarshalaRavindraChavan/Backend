@@ -2,14 +2,26 @@ const User = require("../models/user");
 const { handleError } = require("../errorHandler");
 const jwt = require("jsonwebtoken");
 
-const isAuthenticated  = function(req, res, next) {
+const isAuthenticated  = async function(req, res, next) {
 
     try {
         const token = req.header("x-auth-token");
         if (!token) return res.status(403).send("Access denied.");
-
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.authUser = decoded;
+
+        // check if the saved token and send token are same
+        const userDetails = await User.findOne({ 
+            attributes: ['access_token'],
+            where: {
+            user_ID: req.authUser.user_ID,
+            isDeleted: false
+            }
+        });
+        // check if token was deleted due to logout
+        if(userDetails.access_token === null || userDetails.access_token !== token) {
+            return res.status(400).send("User has logged out");
+        }
 
         next();
     } catch (error) {

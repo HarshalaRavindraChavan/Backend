@@ -327,7 +327,8 @@ const verifyLoginOTP = async (req, res) => {
 
           await User.update(
             {
-              is_OTP_Verified: 1
+              is_OTP_Verified: 1,
+              access_token: token
             }, 
             {
               where: { user_ID: user.user_ID },
@@ -340,7 +341,8 @@ const verifyLoginOTP = async (req, res) => {
             userDetails: {
               userName: user.user_Name,
               userEmail: user.user_Email,
-              userPhone: user.user_phoneno
+              userPhone: user.user_phoneno,
+              role: user.role
             },
             token
           });
@@ -374,6 +376,32 @@ const getUsersByRole = async (req, res) => {
   }
 };
 
+const userLogout = async (req, res) => {
+  console.log("IN LOGOUT");
+  try {
+    console.log(req.authUser);
+    const user = await User.findOne({
+      attributes: ['user_ID'],
+      where: { user_ID: req.authUser.user_ID, isDeleted: false }
+    });
+    if (!user) {
+      return res
+        .status(401)
+        .send({ message: "User does not exit", status: "FAILED" });
+    }
+    await User.update({
+      'access_token': null
+    }, {
+      where: { user_id: req.authUser.user_ID },
+    }),
+      res
+        .status(200)
+        .json({ updateUser, message: "User Logged out successfully" });
+  } catch (error) {
+    handleError(error, res);
+  }
+};
+
 module.exports = {
   registerUser,
   getUsers,
@@ -383,5 +411,6 @@ module.exports = {
   userLogin,
   generateLoginOTP,
   verifyLoginOTP,
-  getUsersByRole
+  getUsersByRole,
+  userLogout
 };

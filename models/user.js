@@ -64,6 +64,10 @@ const User = db.sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    access_token: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
     isDeleted: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
