@@ -8,12 +8,11 @@ const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
 const fast2sms = require("fast-two-sms");
 const dotenv = require("dotenv"); // Ensure fast2sms is imported
-var moment = require('moment');
+var moment = require("moment");
 
 dotenv.config();
 
-const otpStorage = {}; 
-
+const otpStorage = {};
 
 const registerUser = async (req, res) => {
   const {
@@ -23,7 +22,7 @@ const registerUser = async (req, res) => {
     user_phoneno,
     // user_latitude,
     // user_longitude,
-    // user_pincode,
+    user_pincode,
     // user_status,
     // user_OTP,
     // OTP_Expiration,
@@ -43,7 +42,7 @@ const registerUser = async (req, res) => {
       user_phoneno,
       // user_latitude,
       // user_longitude,
-      // user_pincode,
+      user_pincode,
       // user_status,
       // user_OTP,
       // OTP_Expiration,
@@ -69,7 +68,7 @@ const registerUser = async (req, res) => {
 
 const getUsers = async (req, res) => {
   try {
-    const users = await User.findAll({where: { isDeleted: false }});
+    const users = await User.findAll({ where: { isDeleted: false } });
     if (!users) {
       return res
         .status(401)
@@ -87,7 +86,7 @@ const getUserbyID = async (req, res) => {
     const user = await User.findOne({
       where: {
         user_ID: req.params.id,
-        isDeleted: false, 
+        isDeleted: false,
       },
     });
     if (!user) {
@@ -108,7 +107,7 @@ const updateUser = async (req, res) => {
     const user = await User.findOne({
       where: {
         user_ID: ID,
-        isDeleted: false, 
+        isDeleted: false,
       },
     });
     if (!user) {
@@ -139,7 +138,7 @@ const deleteUser = async (req, res) => {
     const user = await User.findOne({
       where: {
         user_ID: ID,
-        isDeleted: false, 
+        isDeleted: false,
       },
     });
     if (!user) {
@@ -180,15 +179,21 @@ const userLogin = async (req, res) => {
       return res.status(401).json({ message: "Invalid password" });
     }
 
-     // Hardcode the JWT_SECRET here
-     const JWT_SECRET = "your_jwt_secret_key"; // Replace with your actual secret key
+     // Check if the user role is admin
+     if (user.role !== "Shop-Owner" && user.role !== "Admin") {
+      return res.status(403).json({ message: "Access denied. Unauthorized role." });
+    }
 
-     // Generate JWT token with user ID and email
-     const token = jwt.sign(
-       { user_ID: user.user_ID, user_Email: user.user_Email },
-       JWT_SECRET,
-       { expiresIn: "1h" } // Set expiration time for the token
-     );
+
+    // Hardcode the JWT_SECRET here
+    const JWT_SECRET = "your_jwt_secret_key"; // Replace with your actual secret key
+
+    // Generate JWT token with user ID and email
+    const token = jwt.sign(
+      { user_ID: user.user_ID, user_Email: user.user_Email },
+      JWT_SECRET,
+      { expiresIn: "1h" } // Set expiration time for the token
+    );
 
     // Respond with success message, JWT token, and user details
     res.status(200).json({
@@ -206,7 +211,9 @@ const userLogin = async (req, res) => {
         role: user.role,
         is_OTP_Verified: user.is_OTP_Verified,
       },
-    });
+      redirectUrl: user.role === "Admin" ? "/dash" : "/shopdash", // Redirect based on role
+    }); // Specify the URL to redirect to on the frontend
+   
   } catch (error) {
     console.error("Error during login:", error);
     res
@@ -244,23 +251,29 @@ const generateLoginOTP = async (req, res) => {
 
     // Save the OTP in database. Required for verfiying validity
     try {
-      const user = await User.findOne({ where: { user_phoneno: user_phoneno, isDeleted: false } });
+      const user = await User.findOne({
+        where: { user_phoneno: user_phoneno, isDeleted: false },
+      });
 
       if (!user) {
         return res
           .status(400)
-          .send({ message: "User does not exit", status: "FAILED", code: "NO_USER" });
+          .send({
+            message: "User does not exit",
+            status: "FAILED",
+            code: "NO_USER",
+          });
       }
       if (user) {
         await User.update(
-                    {
-                      user_OTP: otp,
-                      OTP_Expiration: otp_expiration
-                    }, 
-                    {
-                      where: { user_ID: user.user_ID },
-                    }
-                  );
+          {
+            user_OTP: otp,
+            OTP_Expiration: otp_expiration,
+          },
+          {
+            where: { user_ID: user.user_ID },
+          }
+        );
       }
     } catch (error) {
       console.error("Error sending OTP:", error); // Log detailed error
@@ -279,7 +292,9 @@ const generateLoginOTP = async (req, res) => {
     });
   } catch (error) {
     console.error("Error sending OTP:", error); // Log detailed error
-    res.status(500).json({ message: "Failed to send OTP", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to send OTP", error: error.message });
   }
 };
 
@@ -290,12 +305,16 @@ const verifyLoginOTP = async (req, res) => {
 
     // Validate phone number and OTP input
     if (!user_phoneno || !otp) {
-      return res.status(400).json({ message: "Phone number and OTP are required" });
+      return res
+        .status(400)
+        .json({ message: "Phone number and OTP are required" });
     }
 
     // Get stored OTP from database
     try {
-      const user = await User.findOne({ where: { user_phoneno: user_phoneno, isDeleted: false } });
+      const user = await User.findOne({
+        where: { user_phoneno: user_phoneno, isDeleted: false },
+      });
 
       if (!user) {
         return res
@@ -308,16 +327,18 @@ const verifyLoginOTP = async (req, res) => {
         let duration = moment.duration(moment().diff(user.OTP_Expiration));
         console.log("Diff: ", duration.as("minutes"));
         // Check OTP is valid and not expired
-        if(parseInt(otp) !== user.user_OTP) {
+        if (parseInt(otp) !== user.user_OTP) {
           return res
-          .status(401)
-          .send({ message: "Invalid OTP", status: "FAILED" });
-        } else if(moment().isAfter(user.OTP_Expiration)) {
+            .status(401)
+            .send({ message: "Invalid OTP", status: "FAILED" });
+        } else if (moment().isAfter(user.OTP_Expiration)) {
           return res
-          .status(401)
-          .send({ message: "OTP has expired. Request for a new OTP", status: "FAILED" });
+            .status(401)
+            .send({
+              message: "OTP has expired. Request for a new OTP",
+              status: "FAILED",
+            });
         } else {
-          
           // Generate JWT token with user ID and email
           const token = jwt.sign(
             { user_ID: user.user_ID, user_Email: user.user_Email },
@@ -328,25 +349,25 @@ const verifyLoginOTP = async (req, res) => {
           await User.update(
             {
               is_OTP_Verified: 1,
-              access_token: token
-            }, 
+              access_token: token,
+            },
             {
               where: { user_ID: user.user_ID },
             }
           );
 
           // Success message and additional logic can go here
-          return res.status(200).json({ 
+          return res.status(200).json({
             message: "OTP verified successfully!",
             userDetails: {
               userName: user.user_Name,
               userEmail: user.user_Email,
               userPhone: user.user_phoneno,
-              role: user.role
+              role: user.role,
             },
-            token
+            token,
           });
-        }        
+        }
       }
     } catch (error) {
       console.error("Error validating OTP:", error); // Log detailed error
@@ -354,7 +375,9 @@ const verifyLoginOTP = async (req, res) => {
   } catch (error) {
     // Catch any unexpected errors and respond appropriately
     console.error("Error verifying OTP:", error);
-    return res.status(500).json({ message: "Failed to verify OTP", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Failed to verify OTP", error: error.message });
   }
 };
 
@@ -362,8 +385,14 @@ const getUsersByRole = async (req, res) => {
   const role = req.params.role;
   try {
     const user = await User.findAll({
-      attributes: ['user_ID','user_Name','user_Email','user_phoneno','user_pincode'],
-      where: { role: role, isDeleted: false }
+      attributes: [
+        "user_ID",
+        "user_Name",
+        "user_Email",
+        "user_phoneno",
+        "user_pincode",
+      ],
+      where: { role: role, isDeleted: false },
     });
     if (!user) {
       return res
@@ -381,19 +410,22 @@ const userLogout = async (req, res) => {
   try {
     console.log(req.authUser);
     const user = await User.findOne({
-      attributes: ['user_ID'],
-      where: { user_ID: req.authUser.user_ID, isDeleted: false }
+      attributes: ["user_ID"],
+      where: { user_ID: req.authUser.user_ID, isDeleted: false },
     });
     if (!user) {
       return res
         .status(401)
         .send({ message: "User does not exit", status: "FAILED" });
     }
-    await User.update({
-      'access_token': null
-    }, {
-      where: { user_id: req.authUser.user_ID },
-    }),
+    await User.update(
+      {
+        access_token: null,
+      },
+      {
+        where: { user_id: req.authUser.user_ID },
+      }
+    ),
       res
         .status(200)
         .json({ updateUser, message: "User Logged out successfully" });
@@ -412,5 +444,5 @@ module.exports = {
   generateLoginOTP,
   verifyLoginOTP,
   getUsersByRole,
-  userLogout
+  userLogout,
 };
