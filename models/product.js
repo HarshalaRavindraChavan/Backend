@@ -3,35 +3,18 @@ const db = require('../db/index');  // Adjust the path based on your directory s
 
 // Define the Product model
 const Product = db.sequelize.define('Product', {
-    shop_id: {
-        type: DataTypes.NUMBER,
-        allowNull: false,
-    },
-    product_name: {
+    name: {
         type: DataTypes.STRING,
         allowNull: false,
     },
     description: {
-        type: DataTypes.STRING,
-        allowNull: false,
+        type: DataTypes.TEXT,
+        allowNull: true,
     },
-    price: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-    },
-    stock: {
-        type: DataTypes.NUMBER,
-        allowNull: false,
-    },
-    category: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    image_url: {
+    image: {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    
 });
 
 // Sync the model with the database (optional, usually done in app initialization)

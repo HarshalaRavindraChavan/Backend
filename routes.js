@@ -19,6 +19,7 @@ const { isAuthenticated, isAuthorized } = require('./middlewares/auth');
 const userController = require("./controllers/user");
 const shopController =require("./controllers/shop");
 const productController = require("./controllers/product");
+const shopInventoryController = require("./controllers/shop_inventory");
 
 /* User Routes */
 router.post("/user/register",userController.registerUser);
@@ -41,6 +42,7 @@ router.get('/shops', shopController.getAllShops);
 router.get('/shop/:id', shopController.getShopById);  
 router.put('/shop/update/:id', upload.single('file'), shopController.updateShop);   
 router.delete('/shop/delete/:id', shopController.deleteShop);   
+// router.post('/shop/:id/product/create', shopController.createProductForShop);
 /* End of Shop Routes */
 
 
@@ -51,5 +53,7 @@ router.get('/product/:id', productController.getProductById);
 router.put('/product/update/:id', upload.single('file'), productController.updateProduct);   
 router.delete('/product/delete/:id', productController.deleteProduct);
 /* End of Product Routes */
+
+router.get('/shop-inventory/:shopID', shopInventoryController.getShopProducts);
 
 module.exports=router;

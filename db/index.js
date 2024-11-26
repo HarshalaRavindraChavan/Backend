@@ -10,7 +10,7 @@ const sequelize = new Sequelize(
     host: dbConfig.HOST,
     dialect: dbConfig.DIALECT,
     port: dbConfig.DBPORT,
-    logging: false,
+    logging: console.log,
 });
 
 // Test the connection

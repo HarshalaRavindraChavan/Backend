@@ -34,7 +34,7 @@ const isAuthorized = function(authRoles = []) {
     return async function(req, res, next) {
         try {
             const userDetails = await User.findOne({ 
-                attributes: ['role'],
+                attributes: ['user_ID','user_Email','user_name','user_phoneno','role'],
                 where: {
                 user_ID: req.authUser.user_ID,
                 isDeleted: false
@@ -45,6 +45,7 @@ const isAuthorized = function(authRoles = []) {
             // console.log('User Role: ' + userDetails.role);
 
             if(!authRoles.includes(userDetails.role)) return res.status(403).send("Unauthorized.");
+            req.authUser = userDetails;
         
             next();
         } catch (error) {

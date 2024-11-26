@@ -41,8 +41,10 @@ const createShop = async (req, res) => {
 
 // Controller function to get all shops
 const getAllShops = async (req, res) => {
+    // console.log(req.authUser);
     try {
         const shops = await Shop.findAll(); // Fetch all shops
+                
         res.status(200).json({
             message: "Shops retrieved successfully",
             data: shops

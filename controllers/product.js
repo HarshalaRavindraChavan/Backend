@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path'); 
 
 const createProduct = async (req, res) => {
-    const { shop_id, product_name, description, price, stock, category } = req.body;
+    const { name, description, image } = req.body;
 
     try {
         let image_url = null;
@@ -12,13 +12,9 @@ const createProduct = async (req, res) => {
         }
 
         const newProduct = await Product.create({
-            shop_id: shop_id,
-            product_name: product_name,
+            name: name,
             description: description,
-            price: price,
-            stock: stock,
-            category: category,
-            image_url: image_url
+            image: image
         });
         
         res.status(201).json({
