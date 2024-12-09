@@ -17,7 +17,7 @@ const getShopProducts = async (req, res) => {
         },
         {
           model: Product,
-          attributes: ['name','description','image'],
+          attributes: ['id','name','description','image'],
           required: true
         },
         {
