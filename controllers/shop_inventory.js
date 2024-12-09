@@ -22,7 +22,7 @@ const getShopProducts = async (req, res) => {
         },
         {
           model: Product_Option,
-          attributes: ['name'],
+          attributes: ['id','name'],
           required: true
         } 
       ]
